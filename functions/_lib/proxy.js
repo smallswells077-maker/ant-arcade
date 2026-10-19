@@ -286,7 +286,19 @@ function proxyHref(target, origin) {
 function effectiveUrl(requested, upstream) {
   try {
     const finalUrl = upstream.url;
-    if (finalUrl && finalUrl !== requested.href) return new URL(finalUrl);
+    if (!finalUrl || finalUrl === requested.href) return requested;
+    const final = new URL(finalUrl);
+    /*
+     * Bing redirects cookie-less search requests through /geolocation/write
+     * and then renders the results at that URL. The body is the search page,
+     * but the geolocation URL is not reloadable (and makes the address bar
+     * useless), so keep the URL the user actually asked for.
+     */
+    if (/(^|\.)bing\.com$/i.test(final.hostname) &&
+        final.pathname.replace(/\/+$/, "") === "/geolocation/write") {
+      return requested;
+    }
+    return final;
   } catch (e) { /* ignore */ }
   return requested;
 }

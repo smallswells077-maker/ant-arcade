@@ -446,6 +446,22 @@ def proxy_href(target: str, origin: str) -> str:
     return origin.rstrip("/") + "/p?u=" + encode_token(target)
 
 
+def effective_page_url(requested: str, final: str) -> str:
+    """The URL to resolve links against and show in the address bar.
+
+    Bing sends cookie-less search requests through /geolocation/write and then
+    renders the search page at that URL. The body is the search page, but the
+    geolocation URL is not reloadable, so keep the requested search URL.
+    """
+    try:
+        parts = urllib.parse.urlsplit(final)
+        if (parts.hostname or "").lower().endswith("bing.com") and parts.path.rstrip("/") == "/geolocation/write":
+            return requested
+    except Exception:
+        pass
+    return final or requested
+
+
 def proxy_doc_href(target: str, page_url: str, origin: str) -> str:
     """Document URL that keeps the site's real pathname on the local origin.
 
@@ -1426,6 +1442,7 @@ class ArcadeHandler(http.server.SimpleHTTPRequestHandler):
         content_type = (upstream.headers.get("content-type") or "").lower()
         is_html = "text/html" in content_type or "application/xhtml+xml" in content_type
         is_css = "text/css" in content_type
+        page_url = effective_page_url(target_raw, upstream.url)
 
         if is_html and method == "GET":
             _prewarm_async(target_raw, 3)
@@ -1442,7 +1459,7 @@ class ArcadeHandler(http.server.SimpleHTTPRequestHandler):
         refresh_header = upstream.headers.get("refresh")
         if refresh_header:
             headers["refresh"] = REFRESH_URL_RE.sub(
-                lambda m: "url=" + proxy_doc_href(m.group(1).strip().strip("'\""), upstream.url, origin),
+                lambda m: "url=" + proxy_doc_href(m.group(1).strip().strip("'\""), page_url, origin),
                 refresh_header,
             )
 
@@ -1458,13 +1475,13 @@ class ArcadeHandler(http.server.SimpleHTTPRequestHandler):
                 "text/plain; charset=utf-8",
                 b"",
                 method,
-                {"location": proxy_doc_href(upstream.url, upstream.url, origin), "cache-control": "no-store"},
+                {"location": proxy_doc_href(page_url, page_url, origin), "cache-control": "no-store"},
             )
             return
 
         if method != "HEAD" and is_html:
             text = decode_text(upstream.body, content_type)
-            payload = rewrite_html(text, upstream.url, origin).encode("utf-8")
+            payload = rewrite_html(text, page_url, origin).encode("utf-8")
             headers["content-type"] = "text/html; charset=utf-8"
             headers["cache-control"] = "no-store"
             self.respond(upstream.status, "text/html; charset=utf-8", payload, method, headers)
@@ -1472,7 +1489,7 @@ class ArcadeHandler(http.server.SimpleHTTPRequestHandler):
 
         if method != "HEAD" and is_css:
             text = decode_text(upstream.body, content_type)
-            payload = rewrite_css(text, upstream.url, origin).encode("utf-8")
+            payload = rewrite_css(text, page_url, origin).encode("utf-8")
             headers["cache-control"] = "private, max-age=300"
             _cache_put(cache_key, upstream.status, "text/css; charset=utf-8", payload, headers)
             self.respond(upstream.status, "text/css; charset=utf-8", payload, method, headers)
@@ -1491,7 +1508,7 @@ class ArcadeHandler(http.server.SimpleHTTPRequestHandler):
             except Exception:
                 text = ""
             if IS_HTML_SNIFF_RE.match(text):
-                payload = rewrite_html(text, upstream.url, origin).encode("utf-8")
+                payload = rewrite_html(text, page_url, origin).encode("utf-8")
                 headers["content-type"] = "text/html; charset=utf-8"
                 headers["cache-control"] = "no-store"
                 self.respond(upstream.status, "text/html; charset=utf-8", payload, method, headers)
