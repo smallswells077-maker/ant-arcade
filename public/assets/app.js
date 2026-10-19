@@ -784,6 +784,13 @@
       input.value = "";
     });
 
+    $("#heroSearchInput").addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        $("#heroSearch").requestSubmit();
+      }
+    });
+
     var engineSelect = $("#proxyEngine");
     if (engineSelect) {
       engineSelect.innerHTML = ENGINES.map(function (engine) {
