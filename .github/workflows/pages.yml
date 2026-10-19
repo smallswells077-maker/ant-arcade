@@ -1,0 +1,69 @@
+name: Deploy Ant Arcade to GitHub Pages
+
+# Publishes the static site in public/ to https://<user>.github.io/<repo>/.
+#
+# The web proxy cannot run on GitHub Pages (it is static-only). To make the
+# proxy work on the published site, deploy the Cloudflare Worker first, then
+# add an Actions *variable* named PROXY_BASE:
+#
+#   Settings -> Secrets and variables -> Actions -> Variables -> New variable
+#   PROXY_BASE = https://ant-proxy.<your-subdomain>.workers.dev/p
+#
+# The build step below writes that value into public/assets/proxy-config.js.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Point the site at a hosted proxy (optional)
+        if: ${{ vars.PROXY_BASE != '' }}
+        env:
+          PROXY_BASE: ${{ vars.PROXY_BASE }}
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib
+          base = os.environ["PROXY_BASE"].strip()
+          path = pathlib.Path("public/assets/proxy-config.js")
+          path.write_text(
+              "/* Written by .github/workflows/pages.yml */\n"
+              "window.ANT_PROXY_BASE = " + json.dumps(base) + ";\n",
+              encoding="utf-8",
+          )
+          print("proxy-config.js ->", base)
+          PY
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

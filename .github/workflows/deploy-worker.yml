@@ -1,0 +1,36 @@
+name: Deploy proxy Worker
+
+# Optional. Deploys the Cloudflare Worker proxy (worker.js + functions/_lib/proxy.js)
+# so the static site has a backend. Requires two repository secrets:
+#
+#   CLOUDFLARE_API_TOKEN   -> a token with the "Edit Cloudflare Workers" template
+#   CLOUDFLARE_ACCOUNT_ID  -> your account id (Cloudflare dashboard sidebar)
+#
+# After the first successful run, copy the workers.dev URL into the
+# PROXY_BASE Actions variable (see .github/workflows/pages.yml) and redeploy
+# the site. You can also run this workflow manually from the Actions tab.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "worker.js"
+      - "wrangler.toml"
+      - "functions/_lib/proxy.js"
+      - "proxy/worker.standalone.js"
+      - ".github/workflows/deploy-worker.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy with Wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy

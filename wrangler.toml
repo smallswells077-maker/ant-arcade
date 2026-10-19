@@ -1,0 +1,8 @@
+name = "ant-proxy"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# The proxy needs no bindings or secrets.
+# After `wrangler deploy`, copy the printed workers.dev URL into
+# public/assets/config.js as:
+#   proxyBase: "https://ant-proxy.<your-subdomain>.workers.dev/p"

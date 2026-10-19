@@ -1,0 +1,17 @@
+{
+  "name": "Ant Arcade",
+  "short_name": "Ant",
+  "description": "Free browser games and a built-in web proxy.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#05070f",
+  "theme_color": "#05070f",
+  "icons": [
+    {
+      "src": "assets/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+# Static hosting headers for Cloudflare Pages / Netlify.
+# These apply to the arcade itself, not to proxied pages.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
+
+/assets/*
+  Cache-Control: public, max-age=3600
+
+/games/*
+  Cache-Control: public, max-age=3600
