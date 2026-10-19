@@ -1,13 +1,15 @@
 # 🐜 Ant Arcade
 
 A free, no-ads browser arcade with **13 games** and a **built-in web proxy** —
-including a one-click **DuckDuckGo search** that runs through the proxy.
+including one-click **web search** that runs through the proxy.
+
+**Live:** https://greenantgames.pages.dev/
 
 No build step. No framework. No database. Just static files plus one small
 Cloudflare Function.
 
 ```
-Public search box  →  proxy  →  html.duckduckgo.com
+Public search box  →  proxy  →  bing.com (DuckDuckGo in the picker)
 Game card          →  iframe  (or "Proxy on" to tunnel it)
 Panic key (~)      →  straight to your boring page
 ```
@@ -20,7 +22,7 @@ Panic key (~)      →  straight to your boring page
 | --- | --- |
 | 13 games | 3 written for this project + 10 open-source favourites |
 | Web proxy | `/p?u=<base64url>` — rewrites HTML, CSS, links, redirects and JS requests |
-| DuckDuckGo search | Homepage box, address bar and a 5-engine picker; POST search forms are converted to GET |
+| Web search | Bing by default (DuckDuckGo blocks most cloud IPs); homepage box, address bar and a 5-engine picker |
 | Toggle proxy per game | Handy when a game's CDN is filtered but the proxy isn't |
 | Favorites + recents | Stored in `localStorage` |
 | Panic + cloak | `~` (or `Ctrl+Shift+X`) bails out; Settings renames the tab and icon |
