@@ -527,6 +527,23 @@ function rewriteUrl(rawValue, pageUrl, origin) {
     }
   } catch (e) { /* ignore */ }
 
+  // Unwrap Bing's /ck/a click-tracking redirects (u=a1<base64url target>).
+  try {
+    if (/(^|\.)bing\.com$/i.test(absolute.hostname) &&
+        absolute.pathname.replace(/\/+$/, "") === "/ck/a" &&
+        absolute.searchParams.has("u")) {
+      let raw = absolute.searchParams.get("u") || "";
+      if (raw.indexOf("a1") === 0) raw = raw.slice(2);
+      const decoded = decodeToken(raw);
+      if (decoded) {
+        const destination = new URL(decoded);
+        if (destination.protocol === "http:" || destination.protocol === "https:") {
+          absolute = destination;
+        }
+      }
+    }
+  } catch (e) { /* ignore */ }
+
   // Already proxied?
   try {
     const site = new URL(origin);

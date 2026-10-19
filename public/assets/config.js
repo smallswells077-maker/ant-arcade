@@ -32,21 +32,29 @@ window.ARCADE_CONFIG = {
    * Search engine used by the homepage search box and by the proxy address
    * bar whenever you type words instead of a URL.
    *
-   * The "html." endpoint is a plain-HTML page with no JavaScript, which is
-   * exactly what a proxy can handle cleanly.
+   * Bing is the default on purpose. The free cloud proxy (Worker / Pages)
+   * runs on a datacenter IP, and DuckDuckGo blocks most of those with an
+   * "anomaly" challenge. Bing serves normal HTML from datacenter IPs, so
+   * search keeps working on the published site. DuckDuckGo is still in the
+   * picker and works well from the local preview server.
    */
-  searchUrl: "https://html.duckduckgo.com/html/?q=",
+  searchUrl: "https://www.bing.com/search?q=",
 
   // Page the proxy opens when you click "Proxy" without a specific URL.
-  proxyHome: "https://html.duckduckgo.com/html/",
+  proxyHome: "https://www.bing.com/",
 
   /*
    * Search engines offered in the proxy's picker. The first entry is the
    * default. All of these return mostly-plain HTML, which is what a
-   * rewriting proxy needs. If DuckDuckGo ever throttles your Worker's
-   * datacenter IP, switching to Mojeek or DuckDuckGo Lite usually fixes it.
+   * rewriting proxy needs.
    */
   searchEngines: [
+    {
+      id: "bing",
+      label: "Bing",
+      search: "https://www.bing.com/search?q=",
+      home: "https://www.bing.com/",
+    },
     {
       id: "ddg",
       label: "DuckDuckGo",

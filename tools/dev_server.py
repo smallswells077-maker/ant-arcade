@@ -473,6 +473,20 @@ def proxy_doc_href(target: str, page_url: str, origin: str) -> str:
                 parts = dest
     except Exception:
         pass
+    # Unwrap Bing's /ck/a click-tracking redirects (u=a1<base64url target>).
+    try:
+        if (parts.hostname or "").lower().endswith("bing.com") and parts.path.rstrip("/") == "/ck/a":
+            raw = urllib.parse.parse_qs(parts.query).get("u", [""])[0]
+            if raw.startswith("a1"):
+                raw = raw[2:]
+            pad = "=" * (-len(raw) % 4)
+            decoded = base64.urlsafe_b64decode(raw + pad).decode("utf-8", "replace")
+            dest = urllib.parse.urlsplit(decoded)
+            if dest.scheme in ("http", "https") and dest.netloc:
+                absolute = urllib.parse.urlunsplit(dest)
+                parts = dest
+    except Exception:
+        pass
     if "__proxy=" in absolute:
         return value
     if absolute.startswith(origin.rstrip("/") + "/p?") or absolute.startswith(origin.rstrip("/") + "/p/"):

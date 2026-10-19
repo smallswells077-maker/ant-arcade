@@ -136,17 +136,16 @@
 
   /*
    * Every entry needs `id`, `label`, `search` (query prefix) and `home`.
-   * The first one is the default. If DuckDuckGo ever rate-limits your
-   * Worker, the proxy bar's engine picker is the quick escape hatch — the
-   * picks below are all plain-HTML-friendly.
+   * The first one is the default. Bing is first because DuckDuckGo blocks
+   * datacenter IPs (the cloud proxy's IP); DDG still works from localhost.
    */
   var ENGINES = (Array.isArray(CONFIG.searchEngines) && CONFIG.searchEngines.length)
     ? CONFIG.searchEngines
     : [{
-        id: "ddg",
-        label: "DuckDuckGo",
-        search: CONFIG.searchUrl || "https://html.duckduckgo.com/html/?q=",
-        home: CONFIG.proxyHome || "https://html.duckduckgo.com/html/",
+        id: "bing",
+        label: "Bing",
+        search: CONFIG.searchUrl || "https://www.bing.com/search?q=",
+        home: CONFIG.proxyHome || "https://www.bing.com/",
       }];
 
   function selectedEngine() {
@@ -626,7 +625,7 @@
     }
 
     var engine = selectedEngine();
-    var start = url || engine.home || "https://html.duckduckgo.com/html/";
+    var start = url || engine.home || "https://www.bing.com/";
     navigateProxy(start, { push: true, silentHash: options.silentHash });
   }
 
