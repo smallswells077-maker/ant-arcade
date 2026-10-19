@@ -11,15 +11,9 @@ name: Deploy proxy Worker
 # the site. You can also run this workflow manually from the Actions tab.
 
 on:
+  # Manual only: it needs CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID secrets,
+  # which are not set until you connect a Cloudflare account (see the guide).
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - "worker.js"
-      - "wrangler.toml"
-      - "functions/_lib/proxy.js"
-      - "proxy/worker.standalone.js"
-      - ".github/workflows/deploy-worker.yml"
 
 jobs:
   deploy:
