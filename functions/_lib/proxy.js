@@ -166,6 +166,15 @@ export async function handleProxy(request, env) {
       return new Response(rewritten, { status: upstream.status, headers });
     }
 
+    const isJs = contentType.includes("javascript") || contentType.includes("ecmascript");
+    if (isJs && request.method !== "HEAD") {
+      const original = await upstream.text();
+      const rewritten = rewriteJs(original, page, requestUrl.origin);
+      headers.set("content-type", upstream.headers.get("content-type") || "application/javascript; charset=utf-8");
+      headers.set("cache-control", "private, max-age=300");
+      return new Response(rewritten, { status: upstream.status, headers });
+    }
+
     /*
      * Some CDNs (jsDelivr, for example) serve .html files as text/plain to
      * stop people from using them as a free web host. If the body actually
@@ -486,6 +495,25 @@ function rewriteHtml(html, pageUrl, origin) {
   return injectShim(output, pageUrl, origin);
 }
 
+function rewriteJs(js, pageUrl, origin) {
+  /*
+   * SPAs with code-splitting load chunks via dynamic import("/..."). Those
+   * root-relative paths resolve against the proxy origin, bypassing the proxy.
+   * Rewrite them to proxied URLs so the chunks load.
+   */
+  const page = pageUrl;
+  return String(js).replace(
+    /import\s*\(\s*(['"])(\/[^'"]*)\1/g,
+    function (match, quote, path) {
+      try {
+        const target = new URL(path, page);
+        return "import(" + quote + proxyHref(target.href, origin) + quote + ")";
+      } catch (e) {
+        return match;
+      }
+    }
+  );
+}
 function rewriteCss(css, pageUrl, origin) {
   return String(css)
     .replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/gi, function (match, quote, url) {
